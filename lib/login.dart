@@ -38,27 +38,28 @@ class _LoginState extends State<Login> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    FirebaseAuth.instance.signOut();
+    enterHomeScreen(context);
   }
 
   void enterHomeScreen(context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => Home(),
-      ),
-    );
+    if (FirebaseAuth.instance.currentUser != null)
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => Home(),
+        ),
+      );
   }
 
   void signIn(email, password) async {
-    UserCredential userCredential = await FirebaseAuth.instance
+    await FirebaseAuth.instance
         .signInWithEmailAndPassword(email: email, password: password);
-    if (userCredential.user.email != "") enterHomeScreen(this.context);
+    enterHomeScreen(this.context);
   }
 
   void googleSignIn() async {
-      UserCredential userCredential = await signInWithGoogle();
-      if (userCredential.user.email != "") enterHomeScreen(this.context);
+    await signInWithGoogle();
+    enterHomeScreen(this.context);
   }
 
   Future<UserCredential> signInWithGoogle() async {

@@ -15,11 +15,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "257609500587-mduuhnvvbp3srtsmhsldvoqrcocfcs77.apps.googleusercontent.com",
+          "client_id": "257609500587-5ofcmgi3ti38n0a69fnfcmnabqn72o9q.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.example.gamer_tinder",
-            "certificate_hash": "ae4254bfe2bea95f7f26f627fd1d484a942a757f"
+            "certificate_hash": "9d00c87c6851e7988cc0484abe670554b28c8c8e"
           }
         },
         {

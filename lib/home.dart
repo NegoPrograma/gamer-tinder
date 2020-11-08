@@ -6,34 +6,72 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gamer_tinder/register.dart';
+import 'tabs/contacts.dart';
+import 'tabs/matches.dart';
+import 'tabs/profile.dart';
 
 class Home extends StatefulWidget {
-  /**
-   * Setting Home UI variables
-   */
-
-  String user = "Clica aqui vei";
   @override
   _HomeState createState() => _HomeState();
 }
 
-class _HomeState extends State<Home> {
-  void showUser() {
-    setState(() => widget.user =
-        "Bem vindo, dono do email:" + FirebaseAuth.instance.currentUser.email);
+class _HomeState extends State<Home>
+    with SingleTickerProviderStateMixin {
+
+  TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _tabController = TabController(
+        length: 3,
+        vsync: this,
+      initialIndex: 0
+    );
+
+  }
+
+  @override
+  void dispose() {
+
+    super.dispose();
+    _tabController.dispose();
+
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Home"),backgroundColor: Colors.black,),
-      body: Container(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          children: [
-            FlatButton(onPressed: () => showUser(), child: Text(widget.user))
+      appBar:  AppBar(
+        title: Text("Abas"),
+        bottom: TabBar(
+          indicatorColor: Colors.blueAccent,
+          labelColor: Colors.black,
+          controller: _tabController,
+          tabs: <Widget>[
+            Tab(
+              text: "Procurar",
+              icon: Icon(Icons.favorite,color: Colors.blueAccent,),
+            ),
+            Tab(
+              text: "Contatos",
+              icon: Icon(Icons.chat,color: Colors.blueAccent,),
+            ),
+            Tab(
+              text: "Perfil",
+              icon: Icon(Icons.settings,color: Colors.blueAccent,),
+            ),
           ],
         ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: <Widget>[
+          MatchTab(),
+          Text("uai"),//Contacts(),
+          ProfileTab(),//Profile()
+        ],
       ),
     );
   }
