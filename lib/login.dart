@@ -3,7 +3,7 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -39,6 +39,7 @@ class _LoginState extends State<Login> {
     // TODO: implement initState
     super.initState();
     enterHomeScreen(context);
+    FirebaseAuth.instance.signOut();
   }
 
   void enterHomeScreen(context) {
@@ -57,8 +58,27 @@ class _LoginState extends State<Login> {
     enterHomeScreen(this.context);
   }
 
+
+  void registerGoogleAccountToDatabase(UserCredential credential) async {
+    //registra o documento se ele não existir ainda
+    FirebaseFirestore db = FirebaseFirestore.instance;
+
+    User user = credential.user;
+
+    Map<String,dynamic> data = {
+      "email": user.email,
+      "name": user.displayName,
+      "age": 18,
+      "profilePicURL":
+          "https://freepikpsd.com/wp-content/uploads/2019/10/default-png-2-Transparent-Images.png"
+    };
+    await db.collection("appUsers").doc(user.uid).set(data);
+  }
+
   void googleSignIn() async {
-    await signInWithGoogle();
+    UserCredential user = await signInWithGoogle();
+    if(user.additionalUserInfo.isNewUser)
+      registerGoogleAccountToDatabase(user);
     enterHomeScreen(this.context);
   }
 
