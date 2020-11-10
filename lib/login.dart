@@ -44,12 +44,7 @@ class _LoginState extends State<Login> {
 
   void enterHomeScreen(context) {
     if (FirebaseAuth.instance.currentUser != null)
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => Home(),
-        ),
-      );
+      Navigator.pushNamed(context, "/Home");
   }
 
   void signIn(email, password) async {
@@ -58,14 +53,14 @@ class _LoginState extends State<Login> {
     enterHomeScreen(this.context);
   }
 
-
   void registerGoogleAccountToDatabase(UserCredential credential) async {
     //registra o documento se ele não existir ainda
     FirebaseFirestore db = FirebaseFirestore.instance;
 
     User user = credential.user;
 
-    Map<String,dynamic> data = {
+    Map<String, dynamic> data = {
+      "id": user.uid,
       "email": user.email,
       "name": user.displayName,
       "age": 18,
@@ -77,7 +72,7 @@ class _LoginState extends State<Login> {
 
   void googleSignIn() async {
     UserCredential user = await signInWithGoogle();
-    if(user.additionalUserInfo.isNewUser)
+    if (user.additionalUserInfo.isNewUser)
       registerGoogleAccountToDatabase(user);
     enterHomeScreen(this.context);
   }

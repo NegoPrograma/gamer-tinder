@@ -41,6 +41,7 @@ class _RegisterState extends State<Register> {
         UserCredential userCredential = await auth
             .createUserWithEmailAndPassword(email: email, password: password);
         Map<String, dynamic> data = {
+          "id": userCredential.user.uid,
           "email": email,
           "name": name,
           "age": age,

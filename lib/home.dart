@@ -19,7 +19,7 @@ class _HomeState extends State<Home>
     with SingleTickerProviderStateMixin {
 
   TabController _tabController;
-  
+
 
   @override
   void initState() {
@@ -70,7 +70,7 @@ class _HomeState extends State<Home>
         controller: _tabController,
         children: <Widget>[
           MatchTab(),
-          Text("uai"),//Contacts(),
+          ContactsTab(),//Contacts(),
           ProfileTab(),//Profile()
         ],
       ),
