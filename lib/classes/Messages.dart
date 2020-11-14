@@ -11,7 +11,7 @@ class Messages extends StatefulWidget {
   String _username = "";
   String _myProfilePicURL = "";
 
-  void setValues(contact){
+  void setValues(contact) {
     _contactName = contact["contactName"];
     _profilePicURL = contact["profilePicURL"];
     _userId = contact['userId'];
@@ -20,15 +20,23 @@ class Messages extends StatefulWidget {
     _myProfilePicURL = contact['userPic'];
   }
 
-
-  Messages({contact}) {
-    _contactName = contact["contact"]["contactName"];
-    _profilePicURL = contact["contact"]["profilePicURL"];
-    _userId = contact["contact"]['userId'];
-    _contactId = contact["contact"]['contactId'];
-    _username = contact["contact"]['username'];
-    _myProfilePicURL = contact["contact"]['userPic'];
-    print(_contactId);
+  Messages(Map<String, dynamic> contact) {
+    if (contact != null) {
+      _contactName = contact["contactName"];
+      _profilePicURL = contact["profilePicURL"];
+      _userId = contact['userId'];
+      _contactId = contact['contactId'];
+      _username = contact['username'];
+      _myProfilePicURL = contact['userPic'];
+      print(_contactId);
+    } else {
+      _contactName = "SEILA GARAIO";
+      _profilePicURL = contact["profilePicURL"];
+      _userId = "AETQ68E4TQ8E4";
+      _contactId = "POAEJGMPQOEJMGQE";
+      _username = "CORNAO DOISMIL";
+      _myProfilePicURL = "pare";
+    }
   }
   @override
   _MessagesState createState() => _MessagesState();

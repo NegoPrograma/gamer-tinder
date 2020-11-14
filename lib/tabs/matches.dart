@@ -13,7 +13,7 @@ class MatchTab extends StatefulWidget {
 
 class _MatchTabState extends State<MatchTab> {
   String name;
-  int age;
+  String age;
   String photo;
   String contactId;
   int index = 0;
@@ -70,18 +70,23 @@ class _MatchTabState extends State<MatchTab> {
       'username': user["name"],
       'userPic': user["profilePicURL"],
     };
+    print("ta passando isso ó: ");
+    print(contact);
     //método para executar assim que o build estiver pronto.
-    Navigator.pushNamed(context, "/Messages", arguments: {"contact": contact});
+    Navigator.pushNamed(this.context, "/Messages", arguments: contact);
+
     // SchedulerBinding.instance.addPostFrameCallback((_) {
     //   Navigator.pushNamed(context, "/messages", arguments: {contact});
     // });
   }
 
   void callNextUser(user) {
-    contactId = user["id"];
-    photo = user["profilePicURL"];
-    name = user["name"];
-    age = user["age"];
+    setState(() {
+      contactId = user["id"];
+      photo = user["profilePicURL"];
+      name = user["name"];
+      age = user["age"].toString();
+    });
     index++;
   }
 
@@ -98,7 +103,7 @@ class _MatchTabState extends State<MatchTab> {
           contactId = users[index]["id"];
           photo = users[index]["profilePicURL"];
           name = users[index]["name"];
-          age = users[index]["age"];
+          age = users[index]["age"].toString();
 
           switch (snapshot.connectionState) {
             case ConnectionState.none:
@@ -141,7 +146,7 @@ class _MatchTabState extends State<MatchTab> {
                             FlatButton(
                               color: Colors.greenAccent,
                               child: Text("Yes!"),
-                              onPressed: () async {
+                              onPressed: () {
                                 enterConversation();
                               },
                             ),

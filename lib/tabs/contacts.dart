@@ -14,6 +14,8 @@ class ContactsTab extends StatefulWidget {
 
 class _ContactsTabState extends State<ContactsTab> {
   final _chatController = StreamController<QuerySnapshot>.broadcast();
+  FirebaseFirestore db = FirebaseFirestore.instance;
+  FirebaseAuth auth = FirebaseAuth.instance;
 
   @override
   void initState() {
@@ -39,6 +41,29 @@ class _ContactsTabState extends State<ContactsTab> {
     stream.listen((data) {
       _chatController.add(data);
     });
+  }
+
+  void enterConversation(name, photo, contactId) async {
+    DocumentSnapshot snapshot =
+        await db.collection("appUsers").doc(auth.currentUser.uid).get();
+    Map<String, dynamic> user = snapshot.data();
+
+    Map<String, dynamic> contact = {
+      "contactName": name,
+      "profilePicURL": photo,
+      'contactId': contactId,
+      'userId': user["id"],
+      'username': user["name"],
+      'userPic': user["profilePicURL"],
+    };
+    print("ta passando isso ó: ");
+    print(contact);
+    //método para executar assim que o build estiver pronto.
+    Navigator.pushNamed(this.context, "/Messages", arguments: contact);
+
+    // SchedulerBinding.instance.addPostFrameCallback((_) {
+    //   Navigator.pushNamed(context, "/messages", arguments: {contact});
+    // });
   }
 
   @override
@@ -74,15 +99,19 @@ class _ContactsTabState extends State<ContactsTab> {
                   itemBuilder: (context, index) {
                     return ListTile(
                       onTap: () {
-                        Navigator.pushNamed(context, "messages", arguments: {
-                          "contactName": qs.docs[index]['contactName'],
-                          "profilePicURL": qs.docs[index]
-                              ['contactProfilePhoto'],
-                          "userId": widget.user['userId'],
-                          "contactId": qs.docs[index]['contactId'],
-                          "username": widget.user["name"],
-                          "userPic": widget.user["profilePicURL"]
-                        });
+                        enterConversation(
+                            qs.docs[index]['contactName'],
+                            qs.docs[index]['contactProfilePhoto'],
+                            qs.docs[index]['contactId']);
+                        // Navigator.pushNamed(context, "/Messages", arguments: {
+                        //   "contactName": qs.docs[index]['contactName'],
+                        //   "profilePicURL": qs.docs[index]
+                        //       ['contactProfilePhoto'],
+                        //   "userId": widget.user['userId'],
+                        //   "contactId": qs.docs[index]['contactId'],
+                        //   "username": widget.user["name"],
+                        //   "userPic": widget.user["profilePicURL"]
+                        // });
                       },
                       contentPadding: EdgeInsets.fromLTRB(
                         16,

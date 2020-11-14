@@ -18,7 +18,7 @@ void main() async {
       routes: {
         "/": (context) => Login(),
         "/Home":(context) => Home(),
-        "/Messages": (context) => Messages(),
+        "/Messages": (context) => Messages(ModalRoute.of(context).settings.arguments)
       },
     ),
   );
