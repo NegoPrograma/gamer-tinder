@@ -57,37 +57,44 @@ class _MatchTabState extends State<MatchTab> {
     super.initState();
   }
 
-  void enterConversation() async {
-    DocumentSnapshot snapshot =
-        await db.collection("appUsers").doc(auth.currentUser.uid).get();
-    Map<String, dynamic> user = snapshot.data();
+  // void enterConversation() async {
+  //   DocumentSnapshot snapshot =
+  //       await db.collection("appUsers").doc(auth.currentUser.uid).get();
+  //   Map<String, dynamic> user = snapshot.data();
 
-    Map<String, dynamic> contact = {
-      "contactName": name,
-      "profilePicURL": photo,
-      'contactId': contactId,
-      'userId': user["id"],
-      'username': user["name"],
-      'userPic': user["profilePicURL"],
-    };
-    print("ta passando isso ó: ");
-    print(contact);
-    //método para executar assim que o build estiver pronto.
-    Navigator.pushNamed(this.context, "/Messages", arguments: contact);
+  //   Map<String, dynamic> contact = {
+  //     "contactName": name,
+  //     "profilePicURL": photo,
+  //     'contactId': contactId,
+  //     'userId': user["id"],
+  //     'username': user["name"],
+  //     'userPic': user["profilePicURL"],
+  //   };
+  //   print("ta passando isso ó: ");
+  //   print(contact);
+  //   //método para executar assim que o build estiver pronto.
+  //   Navigator.pushNamed(this.context, "/Messages", arguments: contact);
 
-    // SchedulerBinding.instance.addPostFrameCallback((_) {
-    //   Navigator.pushNamed(context, "/messages", arguments: {contact});
-    // });
-  }
+  //   // SchedulerBinding.instance.addPostFrameCallback((_) {
+  //   //   Navigator.pushNamed(context, "/messages", arguments: {contact});
+  //   // });
+  // }
 
   void callNextUser(user) {
-    setState(() {
-      contactId = user["id"];
-      photo = user["profilePicURL"];
-      name = user["name"];
-      age = user["age"].toString();
-    });
+    contactId = user["id"];
+    photo = user["profilePicURL"];
+    name = user["name"];
+    age = user["age"].toString();
     index++;
+  }
+
+  void matchUser(user) async {
+    Map<String, dynamic> matchTry = {
+      "sender": auth.currentUser.uid,
+      "receiver": user['id']
+    };
+    await db.collection("matches").add(matchTry);
+    callNextUser(user);
   }
 
   Widget build(BuildContext context) {
@@ -147,7 +154,7 @@ class _MatchTabState extends State<MatchTab> {
                               color: Colors.greenAccent,
                               child: Text("Yes!"),
                               onPressed: () {
-                                enterConversation();
+                                matchUser(users[index]);
                               },
                             ),
                           ],

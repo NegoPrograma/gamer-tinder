@@ -21,22 +21,13 @@ class Messages extends StatefulWidget {
   }
 
   Messages(Map<String, dynamic> contact) {
-    if (contact != null) {
-      _contactName = contact["contactName"];
-      _profilePicURL = contact["profilePicURL"];
-      _userId = contact['userId'];
-      _contactId = contact['contactId'];
-      _username = contact['username'];
-      _myProfilePicURL = contact['userPic'];
-      print(_contactId);
-    } else {
-      _contactName = "SEILA GARAIO";
-      _profilePicURL = contact["profilePicURL"];
-      _userId = "AETQ68E4TQ8E4";
-      _contactId = "POAEJGMPQOEJMGQE";
-      _username = "CORNAO DOISMIL";
-      _myProfilePicURL = "pare";
-    }
+    _contactName = contact["contactName"];
+    _profilePicURL = contact["profilePicURL"];
+    _userId = contact['userId'];
+    _contactId = contact['contactId'];
+    _username = contact['username'];
+    _myProfilePicURL = contact['userPic'];
+    print(_contactId);
   }
   @override
   _MessagesState createState() => _MessagesState();
@@ -120,7 +111,7 @@ class _MessagesState extends State<Messages> {
       "contactId": widget._contactId,
       "message": lastMessage['message'],
       "contactName": widget._contactName,
-      "contactProfilePhoto": widget._profilePicURL,
+      "profilePicURL": widget._profilePicURL,
       "type": lastMessage['type'],
     };
 

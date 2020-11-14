@@ -25,10 +25,9 @@ class ProfileTab extends StatefulWidget {
 
 class _ProfileTabState extends State<ProfileTab> {
   String profilePicURL = "";
-
+  FirebaseFirestore db = FirebaseFirestore.instance;
+  FirebaseAuth auth = FirebaseAuth.instance;
   void fetchUserData() async {
-    FirebaseFirestore db = FirebaseFirestore.instance;
-    FirebaseAuth auth = FirebaseAuth.instance;
     DocumentSnapshot snapshot =
         await db.collection("appUsers").doc(auth.currentUser.uid).get();
     Map user = snapshot.data();
@@ -53,6 +52,11 @@ class _ProfileTabState extends State<ProfileTab> {
     fetchUserData();
   }
 
+  void logOut() {
+    auth.signOut();
+    Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -68,8 +72,7 @@ class _ProfileTabState extends State<ProfileTab> {
           TextField(controller: widget._emailController),
           TextField(controller: widget._passwordController),
           TextField(controller: widget._passwordCopyController),
-          // FlatButton(
-          //     onPressed: () => validateAccount(), child: Text("Criar conta.")),
+          FlatButton(onPressed: () => logOut(), child: Text("Sair da conta.")),
         ],
       ),
     );

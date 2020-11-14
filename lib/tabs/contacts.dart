@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../classes/Messages.dart';
 
 class ContactsTab extends StatefulWidget {
   Map<String, dynamic> user;
@@ -21,26 +20,78 @@ class _ContactsTabState extends State<ContactsTab> {
   void initState() {
     super.initState();
 
-    _setUserValues();
+    //_setUserValues();
   }
 
-  void _setUserValues() {
-    String userId = FirebaseAuth.instance.currentUser.uid;
-    Timer(Duration(seconds: 1), () {
-      _getConversations(userId);
-    });
+  Future<List<Map<String, dynamic>>> _getMatches() async {
+    QuerySnapshot myTriedMatches = await db
+        .collection("matches")
+        .where("sender", isEqualTo: auth.currentUser.uid)
+        .get();
+
+    List<Map<String, dynamic>> result = List<Map<String, dynamic>>();
+    for (QueryDocumentSnapshot element in myTriedMatches.docs) {
+      String receiverId = element.data()["receiver"];
+      print("já deu like em $receiverId");
+      QuerySnapshot match = await db
+          .collection("matches")
+          .where("sender", isEqualTo: receiverId)
+          .limit(1)
+          .get();
+      print(
+          "em tese, você já deu match com: " + match.docs[0].data()["sender"]);
+      if (match.docs != null) {
+        DocumentSnapshot user =
+            await db.collection("appUsers").doc(receiverId).get();
+        result.add(user.data());
+      }
+    }
+    print("resultado: ----------------------------------------------");
+    print(result);
+    print("resultado: ----------------------------------------------");
+    return result;
   }
 
-  Stream<QuerySnapshot> _getConversations(String id) {
-    FirebaseFirestore db = FirebaseFirestore.instance;
-    Stream<QuerySnapshot> stream = db
-        .collection("conversations")
-        .doc(id)
-        .collection("last_conversation")
-        .snapshots();
-    stream.listen((data) {
-      _chatController.add(data);
-    });
+  Future<List<QuerySnapshot>> _getMatchestwo() async {
+    QuerySnapshot myTriedMatches = await db
+        .collection("matches")
+        .where("sender", isEqualTo: auth.currentUser.uid)
+        .get();
+
+    List<QuerySnapshot> result = List<QuerySnapshot>();
+
+    for (QueryDocumentSnapshot element in myTriedMatches.docs) {
+      String receiverId = element.data()["receiver"];
+      print("já deu like em $receiverId");
+      QuerySnapshot match = await db
+          .collection("matches")
+          .where("sender", isEqualTo: receiverId)
+          .limit(1)
+          .get();
+      print(
+          "em tese, você já deu match com: " + match.docs[0].data()["sender"]);
+      if (match.docs != null) {
+        result.add(match);
+      }
+    }
+    // myTriedMatches.docs.forEach((element) async {
+    //   String receiverId = element.data()["receiver"];
+    //   print("já deu like em $receiverId");
+    //   QuerySnapshot match = await db
+    //       .collection("matches")
+    //       .where("sender", isEqualTo: receiverId)
+    //       .limit(1)
+    //       .get();
+    //   print(
+    //       "em tese, você já deu match com: " + match.docs[0].data()["sender"]);
+    //   if (match.docs != null) {
+    //     result.add(match);
+    //   }
+    // });
+    print("resultado: ----------------------------------------------");
+    print(result.length);
+    print("resultado: ----------------------------------------------");
+    return result;
   }
 
   void enterConversation(name, photo, contactId) async {
@@ -68,8 +119,8 @@ class _ContactsTabState extends State<ContactsTab> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot>(
-        stream: _chatController.stream,
+    return FutureBuilder<List<Map<String, dynamic>>>(
+        future: _getMatches(),
         builder: (context, snapshot) {
           switch (snapshot.connectionState) {
             case ConnectionState.none:
@@ -88,27 +139,27 @@ class _ContactsTabState extends State<ContactsTab> {
               break;
             case ConnectionState.active:
             case ConnectionState.done:
-              QuerySnapshot qs = snapshot.data;
-              if (snapshot.hasError) return Text("Erro ao carregar dados");
+              List<Map<String, dynamic>> contactList = snapshot.data;
+              if (snapshot.hasError) return Text("Você não tem matches ainda :((");
 
-              if (qs.docs.length == 0)
-                return Text("Você é fracassado e não tem amigos ainda :((");
-
+              if (contactList.length == 0)
+                return Text("Você não tem matches ainda :((");
+              else
               return ListView.builder(
-                  itemCount: qs.docs.length,
+                  itemCount: contactList.length,
                   itemBuilder: (context, index) {
+                    Map<String, dynamic> qs = contactList[index];
+
                     return ListTile(
                       onTap: () {
-                        enterConversation(
-                            qs.docs[index]['contactName'],
-                            qs.docs[index]['contactProfilePhoto'],
-                            qs.docs[index]['contactId']);
+                        enterConversation(qs['name'],
+                            qs['profilePicURL'], qs['id']);
                         // Navigator.pushNamed(context, "/Messages", arguments: {
-                        //   "contactName": qs.docs[index]['contactName'],
-                        //   "profilePicURL": qs.docs[index]
+                        //   "contactName": qs['contactName'],
+                        //   "profilePicURL":
                         //       ['contactProfilePhoto'],
                         //   "userId": widget.user['userId'],
-                        //   "contactId": qs.docs[index]['contactId'],
+                        //   "contactId": qs['contactId'],
                         //   "username": widget.user["name"],
                         //   "userPic": widget.user["profilePicURL"]
                         // });
@@ -123,15 +174,12 @@ class _ContactsTabState extends State<ContactsTab> {
                         maxRadius: 30,
                         backgroundColor: Colors.green,
                         backgroundImage:
-                            NetworkImage(qs.docs[index]['contactProfilePhoto']),
+                            NetworkImage(qs['profilePicURL']),
                       ),
                       title: Text(
-                        qs.docs[index]['contactName'],
+                        qs['name'],
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      subtitle: qs.docs[index]['type'] == "text"
-                          ? Text(qs.docs[index]['message'])
-                          : Text("Imagem recebida"),
                     );
                   });
           }
