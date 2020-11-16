@@ -4,9 +4,10 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:gamer_tinder/home.dart';
+import 'dart:io';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ProfileTab extends StatefulWidget {
   /**
@@ -14,8 +15,6 @@ class ProfileTab extends StatefulWidget {
    */
 
   TextEditingController _emailController = TextEditingController();
-  TextEditingController _passwordController = TextEditingController();
-  TextEditingController _passwordCopyController = TextEditingController();
   TextEditingController _nameController = TextEditingController();
   TextEditingController _ageController = TextEditingController();
 
@@ -27,6 +26,8 @@ class _ProfileTabState extends State<ProfileTab> {
   String profilePicURL = "";
   FirebaseFirestore db = FirebaseFirestore.instance;
   FirebaseAuth auth = FirebaseAuth.instance;
+  FirebaseStorage storage = FirebaseStorage.instance;
+
   void fetchUserData() async {
     DocumentSnapshot snapshot =
         await db.collection("appUsers").doc(auth.currentUser.uid).get();
@@ -45,6 +46,45 @@ class _ProfileTabState extends State<ProfileTab> {
     });
   }
 
+  void updateUserPhoto() async {
+    ImagePicker imagePicker = new ImagePicker();
+    PickedFile choosenImage =
+        await imagePicker.getImage(source: ImageSource.gallery);
+    File image = File(choosenImage.path);
+    String storagePath = "profilePhotos/" + auth.currentUser.uid + ".png";
+    try {
+      TaskSnapshot uploadProgress =
+          await storage.ref(storagePath).putFile(image);
+      String url = await downloadUpdatedPhoto(uploadProgress, storagePath);
+      setState(() {
+        profilePicURL = url;
+      });
+      print("link do arquivo de perfil: $url");
+    } on FirebaseException catch (e) {
+      print("ERRO! $e");
+    }
+  }
+
+  Future<String> downloadUpdatedPhoto(
+      TaskSnapshot uploadStatus, String path) async {
+    String url = await uploadStatus.storage.ref(path).getDownloadURL();
+    await db
+        .collection("appUsers")
+        .doc(auth.currentUser.uid)
+        .update({"profilePicURL": url});
+    return url;
+  }
+
+  void updateUserInfo() async {
+    Map<String, dynamic> userData = {
+      "name": widget._nameController.text,
+      "email": widget._emailController.text,
+      "age": widget._ageController.text.toString(),
+    };
+
+    await db.collection("appUsers").doc(auth.currentUser.uid).update(userData);
+  }
+
   @override
   void initState() {
     // TODO: implement initState
@@ -52,11 +92,12 @@ class _ProfileTabState extends State<ProfileTab> {
     fetchUserData();
   }
 
-  void logOut() {
-    auth.signOut();
-    Navigator.pop(context);
+  void logOut() async {
+    await auth.signOut();
+    Navigator.popAndPushNamed(context, "/");
   }
 
+  Widget status = Container();
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -67,12 +108,20 @@ class _ProfileTabState extends State<ProfileTab> {
             backgroundImage: NetworkImage(profilePicURL),
             radius: 40,
           ),
+          FlatButton(
+              onPressed: () => updateUserPhoto(),
+              child: Text("Atualizar foto.")),
+          status,
           TextField(controller: widget._nameController),
           TextField(controller: widget._ageController),
           TextField(controller: widget._emailController),
-          TextField(controller: widget._passwordController),
-          TextField(controller: widget._passwordCopyController),
-          FlatButton(onPressed: () => logOut(), child: Text("Sair da conta.")),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+            FlatButton(onPressed: () => updateUserInfo(), child: Text("Atualizar info.")),
+          FlatButton(onPressed: () => logOut(), child: Text("Sair da conta."))
+          ],)
+          ,
         ],
       ),
     );

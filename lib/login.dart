@@ -8,7 +8,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:gamer_tinder/register.dart';
-import 'package:gamer_tinder/main.dart';
 
 class Login extends StatefulWidget {
   /**
@@ -36,7 +35,6 @@ class _LoginState extends State<Login> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     enterHomeScreen(context);
   }
@@ -115,10 +113,9 @@ class _LoginState extends State<Login> {
               onPressed: () => enterRegisterScreen(this.context),
               child: Text("Registrar-se"),
             ),
-            // with custom text
             SignInButton(
               Buttons.Google,
-              text: "Sign up with Google",
+              text: "Entrar via Google Email.",
               onPressed: () => googleSignIn(),
             )
           ],

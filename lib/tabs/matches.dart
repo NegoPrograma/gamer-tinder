@@ -16,76 +16,52 @@ class _MatchTabState extends State<MatchTab> {
   String age;
   String photo;
   String contactId;
-  int index = 0;
+  int index;
   FirebaseFirestore db = FirebaseFirestore.instance;
   FirebaseAuth auth = FirebaseAuth.instance;
-  // List<Map<String, dynamic>> users = [
-  //   {
-  //     "name": "example1",
-  //     "photo": "assets/example1.jpeg",
-  //     "age": 23,
-  //   },
-  //   {
-  //     "name": "example2",
-  //     "photo": "assets/example2.jpeg",
-  //     "age": 23,
-  //   },
-  //   {
-  //     "name": "example3",
-  //     "photo": "assets/example3.jpeg",
-  //     "age": 23,
-  //   },
-  //   {
-  //     "name": "example4",
-  //     "photo": "assets/example4.jpeg",
-  //     "age": 23,
-  //   },
-  //   {
-  //     "name": "example5",
-  //     "photo": "assets/example5.jpeg",
-  //     "age": 23,
-  //   },
-  // ];
+  Future fetch;
+  List<Map<String, dynamic>> users;
+  bool loading;
 
-  Future<QuerySnapshot> _getUsers() async {
-    return db.collection("appUsers").get();
+  Future<List<Map<String, dynamic>>> _getUsers() async {
+    QuerySnapshot snapshot = await db.collection("appUsers").get();
+    List<Map<String, dynamic>> users = List<Map<String, dynamic>>();
+    for (QueryDocumentSnapshot snapshot in snapshot.docs) {
+      bool alreadyLiked = await checkIfUserLiked(snapshot.data());
+      //não deverá retornar usuários que você já deu like e obviamente não pode retornar o próprio usuário.
+      if (!alreadyLiked && snapshot.data()["id"] != auth.currentUser.uid)
+        users.add(snapshot.data());
+    }
+    return users;
   }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    loading = true;
+    fetch = _getUsers().then((value) {
+      users = value;
+      index = 0;
+      setState(() {
+        loading = false;
+        contactId = value[0]["id"];
+        photo = value[0]["profilePicURL"];
+        name = value[0]["name"];
+        age = value[0]["age"].toString();
+      });
+    });
   }
 
-  // void enterConversation() async {
-  //   DocumentSnapshot snapshot =
-  //       await db.collection("appUsers").doc(auth.currentUser.uid).get();
-  //   Map<String, dynamic> user = snapshot.data();
-
-  //   Map<String, dynamic> contact = {
-  //     "contactName": name,
-  //     "profilePicURL": photo,
-  //     'contactId': contactId,
-  //     'userId': user["id"],
-  //     'username': user["name"],
-  //     'userPic': user["profilePicURL"],
-  //   };
-  //   print("ta passando isso ó: ");
-  //   print(contact);
-  //   //método para executar assim que o build estiver pronto.
-  //   Navigator.pushNamed(this.context, "/Messages", arguments: contact);
-
-  //   // SchedulerBinding.instance.addPostFrameCallback((_) {
-  //   //   Navigator.pushNamed(context, "/messages", arguments: {contact});
-  //   // });
-  // }
-
   void callNextUser(user) {
-    contactId = user["id"];
-    photo = user["profilePicURL"];
-    name = user["name"];
-    age = user["age"].toString();
-    index++;
+    if (users.length - 1 >= index)
+      setState(() {
+        contactId = user["id"];
+        photo = user["profilePicURL"];
+        name = user["name"];
+        age = user["age"].toString();
+        index++;
+      });
   }
 
   void matchUser(user) async {
@@ -97,75 +73,61 @@ class _MatchTabState extends State<MatchTab> {
     callNextUser(user);
   }
 
+  Future<bool> checkIfUserLiked(Map<String, dynamic> user) async {
+    QuerySnapshot likedUser = await db
+        .collection("matches")
+        .where("sender", isEqualTo: auth.currentUser.uid)
+        .where("receiver", isEqualTo: user["id"])
+        .get();
+    return likedUser.docs.length > 0;
+  }
+
   Widget build(BuildContext context) {
-    return FutureBuilder(
-        future: _getUsers(),
-        builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-          List<QueryDocumentSnapshot> snapshotList = snapshot.data.docs;
-          List<Map<String, dynamic>> users = new List<Map<String, dynamic>>();
-          snapshotList.forEach((element) {
-            users.add(element.data());
-          });
-          print(users);
-          contactId = users[index]["id"];
-          photo = users[index]["profilePicURL"];
-          name = users[index]["name"];
-          age = users[index]["age"].toString();
-
-          switch (snapshot.connectionState) {
-            case ConnectionState.none:
-              break;
-            case ConnectionState.waiting:
-              return Center(
-                child: Column(
-                  children: [
-                    Text(
-                      "Carregando matchs",
-                      style: TextStyle(fontSize: 40),
-                    ),
-                    CircularProgressIndicator()
-                  ],
+    if (loading)
+      return Center(
+        child: Column(
+          children: [
+            Text(
+              "Carregando matchs",
+              style: TextStyle(fontSize: 40),
+            ),
+            CircularProgressIndicator()
+          ],
+        ),
+      );
+    else
+      return Container(
+        child: Stack(
+          children: [
+            Image.network(photo),
+            Column(
+              children: [
+                Text(
+                  name + " " + age.toString(),
                 ),
-              );
-
-              break;
-            case ConnectionState.active:
-            case ConnectionState.done:
-              return Container(
-                child: Stack(
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Image.network(photo),
-                    Column(
-                      children: [
-                        Text(
-                          name + " " + age.toString(),
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            FlatButton(
-                              color: Colors.redAccent,
-                              child: Text("Nope."),
-                              onPressed: () {
-                                callNextUser(users[index]);
-                              },
-                            ),
-                            FlatButton(
-                              color: Colors.greenAccent,
-                              child: Text("Yes!"),
-                              onPressed: () {
-                                matchUser(users[index]);
-                              },
-                            ),
-                          ],
-                        )
-                      ],
+                    FlatButton(
+                      color: Colors.redAccent,
+                      child: Text("Nope."),
+                      onPressed: () {
+                        callNextUser(users[index]);
+                      },
+                    ),
+                    FlatButton(
+                      color: Colors.greenAccent,
+                      child: Text("Yes!"),
+                      onPressed: () {
+                        matchUser(users[index]);
+                      },
                     ),
                   ],
-                ),
-              );
-          }
-          return Container();
-        });
+                )
+              ],
+            ),
+          ],
+        ),
+      );
   }
 }

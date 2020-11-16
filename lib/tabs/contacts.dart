@@ -32,65 +32,18 @@ class _ContactsTabState extends State<ContactsTab> {
     List<Map<String, dynamic>> result = List<Map<String, dynamic>>();
     for (QueryDocumentSnapshot element in myTriedMatches.docs) {
       String receiverId = element.data()["receiver"];
-      print("já deu like em $receiverId");
+      print("você deu like no usuario de id $receiverId");
       QuerySnapshot match = await db
           .collection("matches")
           .where("sender", isEqualTo: receiverId)
-          .limit(1)
+          .where("receiver", isEqualTo: auth.currentUser.uid)
           .get();
-      print(
-          "em tese, você já deu match com: " + match.docs[0].data()["sender"]);
-      if (match.docs != null) {
+      if (match.docs.length > 0) {
         DocumentSnapshot user =
             await db.collection("appUsers").doc(receiverId).get();
         result.add(user.data());
       }
     }
-    print("resultado: ----------------------------------------------");
-    print(result);
-    print("resultado: ----------------------------------------------");
-    return result;
-  }
-
-  Future<List<QuerySnapshot>> _getMatchestwo() async {
-    QuerySnapshot myTriedMatches = await db
-        .collection("matches")
-        .where("sender", isEqualTo: auth.currentUser.uid)
-        .get();
-
-    List<QuerySnapshot> result = List<QuerySnapshot>();
-
-    for (QueryDocumentSnapshot element in myTriedMatches.docs) {
-      String receiverId = element.data()["receiver"];
-      print("já deu like em $receiverId");
-      QuerySnapshot match = await db
-          .collection("matches")
-          .where("sender", isEqualTo: receiverId)
-          .limit(1)
-          .get();
-      print(
-          "em tese, você já deu match com: " + match.docs[0].data()["sender"]);
-      if (match.docs != null) {
-        result.add(match);
-      }
-    }
-    // myTriedMatches.docs.forEach((element) async {
-    //   String receiverId = element.data()["receiver"];
-    //   print("já deu like em $receiverId");
-    //   QuerySnapshot match = await db
-    //       .collection("matches")
-    //       .where("sender", isEqualTo: receiverId)
-    //       .limit(1)
-    //       .get();
-    //   print(
-    //       "em tese, você já deu match com: " + match.docs[0].data()["sender"]);
-    //   if (match.docs != null) {
-    //     result.add(match);
-    //   }
-    // });
-    print("resultado: ----------------------------------------------");
-    print(result.length);
-    print("resultado: ----------------------------------------------");
     return result;
   }
 
@@ -98,7 +51,6 @@ class _ContactsTabState extends State<ContactsTab> {
     DocumentSnapshot snapshot =
         await db.collection("appUsers").doc(auth.currentUser.uid).get();
     Map<String, dynamic> user = snapshot.data();
-
     Map<String, dynamic> contact = {
       "contactName": name,
       "profilePicURL": photo,
@@ -107,15 +59,11 @@ class _ContactsTabState extends State<ContactsTab> {
       'username': user["name"],
       'userPic': user["profilePicURL"],
     };
-    print("ta passando isso ó: ");
-    print(contact);
-    //método para executar assim que o build estiver pronto.
     Navigator.pushNamed(this.context, "/Messages", arguments: contact);
-
-    // SchedulerBinding.instance.addPostFrameCallback((_) {
-    //   Navigator.pushNamed(context, "/messages", arguments: {contact});
-    // });
   }
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -140,48 +88,39 @@ class _ContactsTabState extends State<ContactsTab> {
             case ConnectionState.active:
             case ConnectionState.done:
               List<Map<String, dynamic>> contactList = snapshot.data;
-              if (snapshot.hasError) return Text("Você não tem matches ainda :((");
+              if (snapshot.hasError)
+                return Text("Você não tem matches ainda :((");
 
               if (contactList.length == 0)
                 return Text("Você não tem matches ainda :((");
               else
-              return ListView.builder(
-                  itemCount: contactList.length,
-                  itemBuilder: (context, index) {
-                    Map<String, dynamic> qs = contactList[index];
+                return ListView.builder(
+                    itemCount: contactList.length,
+                    itemBuilder: (context, index) {
+                      Map<String, dynamic> qs = contactList[index];
 
-                    return ListTile(
-                      onTap: () {
-                        enterConversation(qs['name'],
-                            qs['profilePicURL'], qs['id']);
-                        // Navigator.pushNamed(context, "/Messages", arguments: {
-                        //   "contactName": qs['contactName'],
-                        //   "profilePicURL":
-                        //       ['contactProfilePhoto'],
-                        //   "userId": widget.user['userId'],
-                        //   "contactId": qs['contactId'],
-                        //   "username": widget.user["name"],
-                        //   "userPic": widget.user["profilePicURL"]
-                        // });
-                      },
-                      contentPadding: EdgeInsets.fromLTRB(
-                        16,
-                        8,
-                        16,
-                        8,
-                      ),
-                      leading: CircleAvatar(
-                        maxRadius: 30,
-                        backgroundColor: Colors.green,
-                        backgroundImage:
-                            NetworkImage(qs['profilePicURL']),
-                      ),
-                      title: Text(
-                        qs['name'],
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    );
-                  });
+                      return ListTile(
+                        onTap: () {
+                          enterConversation(
+                              qs['name'], qs['profilePicURL'], qs['id']);
+                        },
+                        contentPadding: EdgeInsets.fromLTRB(
+                          16,
+                          8,
+                          16,
+                          8,
+                        ),
+                        leading: CircleAvatar(
+                          maxRadius: 30,
+                          backgroundColor: Colors.green,
+                          backgroundImage: NetworkImage(qs['profilePicURL']),
+                        ),
+                        title: Text(
+                          qs['name'],
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      );
+                    });
           }
           return Container();
         });
