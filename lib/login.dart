@@ -6,8 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:gamer_tinder/register.dart';
+import 'package:location_permissions/location_permissions.dart';
 
 class Login extends StatefulWidget {
   /**
@@ -24,19 +25,68 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
+  Widget loginPage;
+  Widget demandPermissionWidget;
+
   void enterRegisterScreen(context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => Register(),
-      ),
-    );
+    Navigator.pushNamed(context, '/Register');
+  }
+
+  void requirePermission() async {
+    PermissionStatus permission =
+        await LocationPermissions().checkPermissionStatus();
+    if (permission != PermissionStatus.granted) {
+      await LocationPermissions().requestPermissions();
+      setState(() {
+        if (permission == PermissionStatus.granted)
+          demandPermissionWidget = loginPage;
+      });
+    } else if (permission == PermissionStatus.granted) {
+      setState(() {
+        demandPermissionWidget = loginPage;
+      });
+    }
   }
 
   @override
   void initState() {
     super.initState();
     enterHomeScreen(context);
+    loginPage = Container(
+      padding: EdgeInsets.all(16),
+      child: Column(
+        children: [
+          TextField(controller: widget._emailController),
+          TextField(controller: widget._passwordController),
+          FlatButton(
+              onPressed: () => signIn(widget._emailController.text,
+                  widget._passwordController.text),
+              child: Text("Logar no sistema.")),
+          FlatButton(
+            onPressed: () => enterRegisterScreen(this.context),
+            child: Text("Registrar-se"),
+          ),
+          SignInButton(
+            Buttons.Google,
+            text: "Entrar via Google Email.",
+            onPressed: () => googleSignIn(),
+          )
+        ],
+      ),
+    );
+
+    demandPermissionWidget = Container(
+      child: Column(
+        children: [
+          Text(
+              "Este app precisa das suas coordenadas locais para funcionar corretamente."),
+          FlatButton(
+            onPressed: () => requirePermission(),
+            child: Text("Dar permissão."),
+          ),
+        ],
+      ),
+    );
   }
 
   void enterHomeScreen(context) {
@@ -55,14 +105,15 @@ class _LoginState extends State<Login> {
     FirebaseFirestore db = FirebaseFirestore.instance;
 
     User user = credential.user;
-
+    Position userPos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
     Map<String, dynamic> data = {
       "id": user.uid,
       "email": user.email,
       "name": user.displayName,
       "age": 18,
       "profilePicURL":
-          "https://freepikpsd.com/wp-content/uploads/2019/10/default-png-2-Transparent-Images.png"
+          "https://freepikpsd.com/wp-content/uploads/2019/10/default-png-2-Transparent-Images.png",
+      "coordinates":{"latitude":userPos.latitude,"longitude":userPos.longitude}
     };
     await db.collection("appUsers").doc(user.uid).set(data);
   }
@@ -99,28 +150,7 @@ class _LoginState extends State<Login> {
         title: Text("Login page"),
         backgroundColor: Colors.blueAccent,
       ),
-      body: Container(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          children: [
-            TextField(controller: widget._emailController),
-            TextField(controller: widget._passwordController),
-            FlatButton(
-                onPressed: () => signIn(widget._emailController.text,
-                    widget._passwordController.text),
-                child: Text("Logar no sistema.")),
-            FlatButton(
-              onPressed: () => enterRegisterScreen(this.context),
-              child: Text("Registrar-se"),
-            ),
-            SignInButton(
-              Buttons.Google,
-              text: "Entrar via Google Email.",
-              onPressed: () => googleSignIn(),
-            )
-          ],
-        ),
-      ),
+      body: demandPermissionWidget,
     );
   }
 }

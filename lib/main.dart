@@ -7,6 +7,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:gamer_tinder/classes/Messages.dart';
 import 'package:gamer_tinder/home.dart';
 import 'package:gamer_tinder/login.dart';
+import 'package:gamer_tinder/register.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,8 +18,10 @@ void main() async {
       initialRoute: "/",
       routes: {
         "/": (context) => Login(),
-        "/Home":(context) => Home(),
-        "/Messages": (context) => Messages(ModalRoute.of(context).settings.arguments)
+        "/Home": (context) => Home(),
+        "/Register": (context) => Register(),
+        "/Messages": (context) =>
+            Messages(ModalRoute.of(context).settings.arguments)
       },
     ),
   );

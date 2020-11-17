@@ -34,6 +34,8 @@ dependencies:
   google_sign_in: ^4.5.1
   flutter_signin_button: ^1.1.0
   image_picker: ^0.6.7+14
+  location_permissions: ^3.0.0
+  geolocator: ^6.1.4
 
 dev_dependencies:
   flutter_test:

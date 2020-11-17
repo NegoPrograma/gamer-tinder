@@ -1,10 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/scheduler.dart';
-import 'package:gamer_tinder/register.dart';
+import 'package:geolocator/geolocator.dart';
 
 class MatchTab extends StatefulWidget {
   @override
@@ -24,6 +22,7 @@ class _MatchTabState extends State<MatchTab> {
   bool loading;
 
   Future<List<Map<String, dynamic>>> _getUsers() async {
+    
     QuerySnapshot snapshot = await db.collection("appUsers").get();
     List<Map<String, dynamic>> users = List<Map<String, dynamic>>();
     for (QueryDocumentSnapshot snapshot in snapshot.docs) {
@@ -95,7 +94,7 @@ class _MatchTabState extends State<MatchTab> {
           ],
         ),
       );
-    else
+    else if (index <= users.length)
       return Container(
         child: Stack(
           children: [
@@ -129,5 +128,7 @@ class _MatchTabState extends State<MatchTab> {
           ],
         ),
       );
+    else
+      return Text("Não temos mais matches disponíveis!");
   }
 }
