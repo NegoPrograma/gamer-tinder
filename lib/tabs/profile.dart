@@ -8,7 +8,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:geolocator/geolocator.dart';
 
 class ProfileTab extends StatefulWidget {
   /**
@@ -111,7 +110,7 @@ class _ProfileTabState extends State<ProfileTab> {
           ),
           FlatButton(
               onPressed: () => updateUserPhoto(),
-              child: Text("Atualizar foto.")),
+              child: Text("Mudar imagem de perfil")),
           status,
           TextField(controller: widget._nameController),
           TextField(controller: widget._ageController),
@@ -119,7 +118,7 @@ class _ProfileTabState extends State<ProfileTab> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-            FlatButton(onPressed: () => updateUserInfo(), child: Text("Atualizar info.")),
+            FlatButton(onPressed: () => updateUserInfo(), child: Text("Salvar")),
           FlatButton(onPressed: () => logOut(), child: Text("Sair da conta."))
           ],)
           ,

@@ -41,13 +41,19 @@ class _RegisterState extends State<Register> {
       try {
         UserCredential userCredential = await auth
             .createUserWithEmailAndPassword(email: email, password: password);
+        Position userPos = await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.high);
         Map<String, dynamic> data = {
           "id": userCredential.user.uid,
           "email": email,
           "name": name,
           "age": age,
           "profilePicURL":
-              "https://www.construtoracesconetto.com.br/wp-content/uploads/2020/03/blank-profile-picture-973460_640.png"
+              "https://www.construtoracesconetto.com.br/wp-content/uploads/2020/03/blank-profile-picture-973460_640.png",
+          "coordinates": {
+            "latitude": userPos.latitude,
+            "longitude": userPos.longitude
+          }
         };
         print(
             "------------------CREDENTIALSSSSSSSSSSSSSSSSSSSSSSSSSS----------" +

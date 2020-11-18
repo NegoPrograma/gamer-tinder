@@ -37,6 +37,7 @@ class _LoginState extends State<Login> {
         await LocationPermissions().checkPermissionStatus();
     if (permission != PermissionStatus.granted) {
       await LocationPermissions().requestPermissions();
+      permission = await LocationPermissions().checkPermissionStatus();
       setState(() {
         if (permission == PermissionStatus.granted)
           demandPermissionWidget = loginPage;
@@ -105,7 +106,8 @@ class _LoginState extends State<Login> {
     FirebaseFirestore db = FirebaseFirestore.instance;
 
     User user = credential.user;
-    Position userPos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+    Position userPos = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
     Map<String, dynamic> data = {
       "id": user.uid,
       "email": user.email,
@@ -113,7 +115,10 @@ class _LoginState extends State<Login> {
       "age": 18,
       "profilePicURL":
           "https://freepikpsd.com/wp-content/uploads/2019/10/default-png-2-Transparent-Images.png",
-      "coordinates":{"latitude":userPos.latitude,"longitude":userPos.longitude}
+      "coordinates": {
+        "latitude": userPos.latitude,
+        "longitude": userPos.longitude
+      }
     };
     await db.collection("appUsers").doc(user.uid).set(data);
   }
