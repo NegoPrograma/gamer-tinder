@@ -52,7 +52,6 @@ class _LoginState extends State<Login> {
   @override
   void initState() {
     super.initState();
-    enterHomeScreen(context);
     loginPage = Container(
       padding: EdgeInsets.all(16),
       child: Column(
@@ -104,7 +103,6 @@ class _LoginState extends State<Login> {
   void registerGoogleAccountToDatabase(UserCredential credential) async {
     //registra o documento se ele não existir ainda
     FirebaseFirestore db = FirebaseFirestore.instance;
-
     User user = credential.user;
     Position userPos = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
@@ -126,7 +124,7 @@ class _LoginState extends State<Login> {
   void googleSignIn() async {
     UserCredential user = await signInWithGoogle();
     if (user.additionalUserInfo.isNewUser)
-      registerGoogleAccountToDatabase(user);
+      await registerGoogleAccountToDatabase(user);
     enterHomeScreen(this.context);
   }
 

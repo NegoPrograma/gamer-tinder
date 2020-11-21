@@ -20,37 +20,37 @@ class _MatchTabState extends State<MatchTab> {
   FirebaseAuth auth = FirebaseAuth.instance;
   Future userFetch;
   List<Map<String, dynamic>> users;
-  bool fetchingUsers, currentUserFetched;
+  bool fetchingUsers, currentUserFetched, noMatchAvaiable;
 
   Map<String, dynamic> user, currentUser;
 
   Future<List<Map<String, dynamic>>> _getUsers() async {
     QuerySnapshot snapshot = await db.collection("appUsers").get();
     List<Map<String, dynamic>> users = List<Map<String, dynamic>>();
-
-    for (QueryDocumentSnapshot snapshot in snapshot.docs) {
-      bool alreadyLiked = await checkIfUserLiked(snapshot.data());
-      //não deverá retornar usuários que você já deu like e obviamente não pode retornar o próprio usuário.
-      if (!alreadyLiked && snapshot.data()["id"] != auth.currentUser.uid)
-        users.add(snapshot.data());
-    }
-
-    /**
+    if (snapshot.docs.length > 0) {
+      for (QueryDocumentSnapshot snapshot in snapshot.docs) {
+        bool alreadyLiked = await checkIfUserLiked(snapshot.data());
+        //não deverá retornar usuários que você já deu like e obviamente não pode retornar o próprio usuário.
+        if (!alreadyLiked && snapshot.data()["id"] != auth.currentUser.uid)
+          users.add(snapshot.data());
+      }
+      /**
      * ordenando do mais perto até o mais longe.
      */
-    Position userPos = await Geolocator.getCurrentPosition();
-    await db.collection("appUsers").doc(auth.currentUser.uid).update(
-      {
-        "coordinates": {
-          "latitude": userPos.latitude,
-          "longitude": userPos.longitude
+      Position userPos = await Geolocator.getCurrentPosition();
+      await db.collection("appUsers").doc(auth.currentUser.uid).update(
+        {
+          "coordinates": {
+            "latitude": userPos.latitude,
+            "longitude": userPos.longitude
+          },
         },
-      },
-    );
+      );
+      users.sort((userA, userB) => compareDistances(userA, userB));
 
-    users.sort((userA, userB) => compareDistances(userA, userB));
-
-    return users;
+      return users;
+    } else
+      return null;
   }
 
 /**
@@ -63,7 +63,6 @@ class _MatchTabState extends State<MatchTab> {
         userA["coordinates"]["longitude"],
         currentUser["coordinates"]["latitude"],
         currentUser["coordinates"]["longitude"]);
-
     double distanceB = Geolocator.distanceBetween(
         userB["coordinates"]["latitude"],
         userB["coordinates"]["longitude"],
@@ -90,6 +89,7 @@ class _MatchTabState extends State<MatchTab> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    noMatchAvaiable = false;
     fetchingUsers = true;
     currentUserFetched = false;
     userFetch = initiateUserData().then((value) {
@@ -100,12 +100,16 @@ class _MatchTabState extends State<MatchTab> {
       users = value;
       index = 0;
       setState(() {
+        if (value != null && value.length > 0) {
+          contactId = value[0]["id"];
+          photo = value[0]["profilePicURL"];
+          name = value[0]["name"];
+          age = value[0]["age"].toString();
+          distance = getUniqueDistance(currentUser, value[0]);
+        } else {
+          noMatchAvaiable = true;
+        }
         fetchingUsers = false;
-        contactId = value[0]["id"];
-        photo = value[0]["profilePicURL"];
-        name = value[0]["name"];
-        age = value[0]["age"].toString();
-        distance = getUniqueDistance(currentUser, value[0]);
       });
     });
   }
@@ -118,15 +122,14 @@ class _MatchTabState extends State<MatchTab> {
   }
 
   void callNextUser(user) {
-    if (users.length - 1 >= index)
       setState(() {
         contactId = user["id"];
         photo = user["profilePicURL"];
         name = user["name"];
         age = user["age"].toString();
         distance = getUniqueDistance(currentUser, user);
+        index++;
       });
-    index++;
   }
 
   void matchUser(user) async {
@@ -134,7 +137,14 @@ class _MatchTabState extends State<MatchTab> {
       "sender": auth.currentUser.uid,
       "receiver": user['id']
     };
-    await db.collection("matches").add(matchTry);
+    //garantindo que você só pode dar match uma vez
+    QuerySnapshot snapshot = await db
+        .collection("matches")
+        .where("sender", isEqualTo: auth.currentUser.uid)
+        .where("receiver", isEqualTo: user['id']).get();
+
+    if(snapshot.docs.length < 1)
+      await db.collection("matches").add(matchTry);
     callNextUser(user);
   }
 
@@ -145,6 +155,18 @@ class _MatchTabState extends State<MatchTab> {
         .where("receiver", isEqualTo: user["id"])
         .get();
     return likedUser.docs.length > 0;
+  }
+
+  String showTags(Map<String, dynamic> user) {
+    StringBuffer tags = StringBuffer();
+    tags.write("tags: ");
+    if (user['tags'] != null)
+      user['tags'].forEach((tag) {
+        tags.write(tag);
+        tags.write(",");
+      });
+
+    return tags.toString();
   }
 
   Widget build(BuildContext context) {
@@ -160,7 +182,7 @@ class _MatchTabState extends State<MatchTab> {
           ],
         ),
       );
-    else if (index <= users.length)
+    else if (index <= users.length && !noMatchAvaiable)
       return Container(
         child: Stack(
           children: [
@@ -175,6 +197,7 @@ class _MatchTabState extends State<MatchTab> {
                       distance.toStringAsFixed(1) +
                       "km",
                 ),
+                Text(showTags(users[index])),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -182,14 +205,20 @@ class _MatchTabState extends State<MatchTab> {
                       color: Colors.redAccent,
                       child: Text("Nope."),
                       onPressed: () {
-                        callNextUser(users[index]);
+                        if (index+1 <= users.length-1)
+                          callNextUser(users[index+1]);
+                        else
+                          setState(() => noMatchAvaiable = true);
                       },
                     ),
                     FlatButton(
                       color: Colors.greenAccent,
                       child: Text("Yes!"),
                       onPressed: () {
-                        matchUser(users[index]);
+                        if (index+1 <= users.length-1)
+                          matchUser(users[index+1]);
+                        else
+                          setState(() => noMatchAvaiable = true);
                       },
                     ),
                   ],
@@ -199,7 +228,7 @@ class _MatchTabState extends State<MatchTab> {
           ],
         ),
       );
-    else
+    else if (noMatchAvaiable)
       return Text("Não temos mais matches disponíveis!");
   }
 }

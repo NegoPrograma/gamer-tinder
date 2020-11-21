@@ -27,16 +27,32 @@ class _ProfileTabState extends State<ProfileTab> {
   FirebaseFirestore db = FirebaseFirestore.instance;
   FirebaseAuth auth = FirebaseAuth.instance;
   FirebaseStorage storage = FirebaseStorage.instance;
+  List<FlatButton> tagButtons = List<FlatButton>();
+  List<String> tags = List<String>();
 
   void fetchUserData() async {
     DocumentSnapshot snapshot =
         await db.collection("appUsers").doc(auth.currentUser.uid).get();
-    Map user = snapshot.data();
+    Map<String, dynamic> user = snapshot.data();
 
     String email = user["email"];
     String name = user["name"];
     String age = user["age"].toString();
     String imageURL = user["profilePicURL"];
+    if (user["tags"] != null) {
+      tags = List<String>.from(user["tags"]);
+      tags.forEach((element) {
+        setState(() {
+          tagButtons.add(
+            FlatButton(
+              color: Colors.blueAccent,
+              onPressed: ()=>showTagRemovalDialog(element),
+              child: Text(element),
+            ),
+          );
+        });
+      });
+    }
 
     setState(() {
       widget._nameController.text = name;
@@ -44,6 +60,8 @@ class _ProfileTabState extends State<ProfileTab> {
       widget._ageController.text = age;
       profilePicURL = imageURL;
     });
+
+    setState(() {});
   }
 
   void updateUserPhoto() async {
@@ -80,6 +98,7 @@ class _ProfileTabState extends State<ProfileTab> {
       "name": widget._nameController.text,
       "email": widget._emailController.text,
       "age": widget._ageController.text.toString(),
+      "tags": tags
     };
 
     await db.collection("appUsers").doc(auth.currentUser.uid).update(userData);
@@ -87,7 +106,6 @@ class _ProfileTabState extends State<ProfileTab> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     fetchUserData();
   }
@@ -97,33 +115,157 @@ class _ProfileTabState extends State<ProfileTab> {
     Navigator.popAndPushNamed(context, "/");
   }
 
+  void removeTag(String tag) async {
+    tags.remove(tag);
+    await db
+        .collection("appUsers")
+        .doc(auth.currentUser.uid)
+        .update({"tags": tags});
+  }
+
+  void showTagRemovalDialog(String tag) async {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: new Text("Deseja remover essa tag?"),
+            actions: <Widget>[
+              // define os botões na base do dialogo
+              FlatButton(
+                child: new Text("Não"),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              FlatButton(
+                child: new Text("Sim"),
+                onPressed: () {
+                  removeTag(tag);
+                  Navigator.of(context).pop();
+                },
+              )
+            ],
+          );
+        });
+  }
+
+  void addTagToList(String tag) {
+    //no caso do usuário tentar colocar a opção da lista "selecione uma opção"
+    if (!tag.contains("uma") && !tags.contains(tag)) {
+      setState(() {
+        tagButtons.add(FlatButton(
+            color: Colors.blueAccent,
+            onPressed: () {
+              showTagRemovalDialog(tag);
+            },
+            child: Text(tag)));
+        tags.add(tag);
+      });
+    }
+  }
+
+  AlertDialog showTagOptions() {
+    String dropdownValue = 'Selecione uma opção.';
+    DropdownButton options = DropdownButton<String>(
+      value: dropdownValue,
+      icon: Icon(Icons.arrow_downward),
+      iconSize: 24,
+      elevation: 16,
+      style: TextStyle(color: Colors.deepPurple),
+      underline: Container(
+        height: 2,
+        color: Colors.deepPurpleAccent,
+      ),
+      onChanged: (String newValue) {
+        setState(() {
+          dropdownValue = newValue;
+        });
+      },
+      items: <String>[
+        'Selecione uma opção.',
+        'CS:GO',
+        'GTAV',
+        'League of Legends',
+        'Dark Souls'
+      ].map<DropdownMenuItem<String>>((String value) {
+        return DropdownMenuItem<String>(
+          value: value,
+          child: Text(value),
+        );
+      }).toList(),
+    );
+
+    return AlertDialog(
+      title: new Text("Selecione uma tag."),
+      content: options,
+      actions: <Widget>[
+        // define os botões na base do dialogo
+        FlatButton(
+          child: new Text("Fechar"),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+        FlatButton(
+          child: new Text("Adicionar Tag"),
+          onPressed: () {
+            addTagToList(dropdownValue);
+            Navigator.of(context).pop();
+          },
+        )
+      ],
+    );
+  }
+
   Widget status = Container();
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(16),
-      child: Column(
-        children: [
-          CircleAvatar(
-            backgroundImage: NetworkImage(profilePicURL),
-            radius: 40,
-          ),
-          FlatButton(
-              onPressed: () => updateUserPhoto(),
-              child: Text("Mudar imagem de perfil")),
-          status,
-          TextField(controller: widget._nameController),
-          TextField(controller: widget._ageController),
-          TextField(controller: widget._emailController),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+        padding: EdgeInsets.all(16),
+        child: SingleChildScrollView(
+          child: Column(
             children: [
-            FlatButton(onPressed: () => updateUserInfo(), child: Text("Salvar")),
-          FlatButton(onPressed: () => logOut(), child: Text("Sair da conta."))
-          ],)
-          ,
-        ],
-      ),
-    );
+              CircleAvatar(
+                backgroundImage: NetworkImage(profilePicURL),
+                radius: 40,
+              ),
+              FlatButton(
+                  onPressed: () => updateUserPhoto(),
+                  child: Text("Mudar imagem de perfil")),
+              status,
+              TextField(controller: widget._nameController),
+              TextField(controller: widget._ageController),
+              TextField(controller: widget._emailController),
+              Column(
+                children: [
+                  Text("Suas tags: "),
+                  Row(
+                    children: tagButtons,
+                  ),
+                  FlatButton(
+                    onPressed: () {
+                      showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return showTagOptions();
+                          });
+                    },
+                    child: Text("+"),
+                  ),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  FlatButton(
+                      onPressed: () => updateUserInfo(), child: Text("Salvar")),
+                  FlatButton(
+                      onPressed: () => logOut(), child: Text("Sair da conta."))
+                ],
+              ),
+            ],
+          ),
+        ));
+    ;
   }
 }

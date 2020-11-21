@@ -5,6 +5,7 @@ firebase_auth=/home/isaac/snap/flutter/common/flutter/.pub-cache/hosted/pub.dart
 firebase_auth_web=/home/isaac/snap/flutter/common/flutter/.pub-cache/hosted/pub.dartlang.org/firebase_auth_web-0.3.1+2/
 firebase_core=/home/isaac/snap/flutter/common/flutter/.pub-cache/hosted/pub.dartlang.org/firebase_core-0.5.2/
 firebase_core_web=/home/isaac/snap/flutter/common/flutter/.pub-cache/hosted/pub.dartlang.org/firebase_core_web-0.2.1/
+firebase_messaging=/home/isaac/snap/flutter/common/flutter/.pub-cache/hosted/pub.dartlang.org/firebase_messaging-8.0.0-dev.8/
 firebase_storage=/home/isaac/snap/flutter/common/flutter/.pub-cache/hosted/pub.dartlang.org/firebase_storage-5.0.1/
 flutter_plugin_android_lifecycle=/home/isaac/snap/flutter/common/flutter/.pub-cache/hosted/pub.dartlang.org/flutter_plugin_android_lifecycle-1.0.11/
 geolocator=/home/isaac/snap/flutter/common/flutter/.pub-cache/hosted/pub.dartlang.org/geolocator-6.1.6/
