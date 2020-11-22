@@ -2,6 +2,8 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -46,7 +48,7 @@ class _ProfileTabState extends State<ProfileTab> {
           tagButtons.add(
             FlatButton(
               color: Colors.blueAccent,
-              onPressed: ()=>showTagRemovalDialog(element),
+              onPressed: () => showTagRemovalDialog(element),
               child: Text(element),
             ),
           );
@@ -93,15 +95,71 @@ class _ProfileTabState extends State<ProfileTab> {
     return url;
   }
 
+  List<String> errors = List<String>();
+  String _errorShowed = "";
+
+  void checkNullValues(String name, String age) {
+    List<String> textFields = List<String>();
+    textFields.add(age);
+    textFields.add(name);
+    int i = 0;
+    while (i < textFields.length) {
+      if (textFields[i].isEmpty) {
+        errors.add("Preencha todos os campos.");
+        break;
+      }
+      i++;
+    }
+  }
+
+  void checkValidLength(String name) {
+    if (name.length < 3)
+      errors.add("Seu nome deve conter pelo menos 3 caractéres");
+  }
+
+  bool validateData(
+    String name,
+    String age,
+  ) {
+    checkNullValues(name, age);
+    checkValidLength(name);
+    return errors.length < 0;
+  }
+
   void updateUserInfo() async {
     Map<String, dynamic> userData = {
       "name": widget._nameController.text,
-      "email": widget._emailController.text,
       "age": widget._ageController.text.toString(),
       "tags": tags
     };
+    if (validateData(
+        widget._nameController.text, widget._ageController.text.toString()))
+      await db
+          .collection("appUsers")
+          .doc(auth.currentUser.uid)
+          .update(userData);
+    else
+      callErrors();
+  }
 
-    await db.collection("appUsers").doc(auth.currentUser.uid).update(userData);
+  void callErrors() {
+    StringBuffer errorStringBuffer = StringBuffer();
+    errorStringBuffer.write("Erros: \n");
+    errors.forEach((error) {
+      errorStringBuffer.write(error);
+      errorStringBuffer.write("\n");
+    });
+
+    setState(() {
+      _errorShowed = errorStringBuffer.toString();
+    });
+
+    Timer(Duration(seconds: 10), () {
+      setState(() {
+        errors = List<String>();
+        _errorShowed = "";
+      });
+    });
   }
 
   @override
@@ -233,9 +291,19 @@ class _ProfileTabState extends State<ProfileTab> {
                   onPressed: () => updateUserPhoto(),
                   child: Text("Mudar imagem de perfil")),
               status,
-              TextField(controller: widget._nameController),
-              TextField(controller: widget._ageController),
-              TextField(controller: widget._emailController),
+              TextField(
+                controller: widget._nameController,
+                decoration: InputDecoration(labelText: "Nome:"),
+              ),
+              TextField(
+                controller: widget._ageController,
+                decoration: InputDecoration(labelText: "Idade:"),
+              ),
+              TextField(
+                controller: widget._emailController,
+                enabled: false,
+                decoration: InputDecoration(labelText: "Email:"),
+              ),
               Column(
                 children: [
                   Text("Suas tags: "),
@@ -263,6 +331,7 @@ class _ProfileTabState extends State<ProfileTab> {
                       onPressed: () => logOut(), child: Text("Sair da conta."))
                 ],
               ),
+              Text(_errorShowed),
             ],
           ),
         ));
