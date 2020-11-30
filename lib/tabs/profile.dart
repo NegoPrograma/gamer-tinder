@@ -123,7 +123,7 @@ class _ProfileTabState extends State<ProfileTab> {
   ) {
     checkNullValues(name, age);
     checkValidLength(name);
-    return errors.length < 0;
+    return errors.length == 0;
   }
 
   void updateUserInfo() async {

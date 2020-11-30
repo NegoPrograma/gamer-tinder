@@ -71,7 +71,7 @@ class _RegisterState extends State<Register> {
     checkNullValues(email, name, age, password, passwordCopy);
     checkPasswordEqualValues(password, passwordCopy);
     checkValidLength(name, password);
-    return errors.length < 0;
+    return errors.length == 0;
   }
 
   void callErrors() {
