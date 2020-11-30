@@ -193,7 +193,7 @@ class _MatchTabState extends State<MatchTab> {
               children: [
               Container(
                 child:
-                Image.network(photo, width: MediaQuery.of(context).size.width * .95),
+                Image.network(photo, height: MediaQuery.of(context).size.height * .5),
               ),
                 Text(
                   name +
