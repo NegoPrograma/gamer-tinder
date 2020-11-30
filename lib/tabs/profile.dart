@@ -29,7 +29,6 @@ class _ProfileTabState extends State<ProfileTab> {
   FirebaseFirestore db = FirebaseFirestore.instance;
   FirebaseAuth auth = FirebaseAuth.instance;
   FirebaseStorage storage = FirebaseStorage.instance;
-  List<FlatButton> tagButtons = List<FlatButton>();
   List<String> tags = List<String>();
 
   void fetchUserData() async {
@@ -45,13 +44,7 @@ class _ProfileTabState extends State<ProfileTab> {
       tags = List<String>.from(user["tags"]);
       tags.forEach((element) {
         setState(() {
-          tagButtons.add(
-            FlatButton(
-              color: Colors.blueAccent,
-              onPressed: () => showTagRemovalDialog(element),
-              child: Text(element),
-            ),
-          );
+          tags.add(element);
         });
       });
     }
@@ -121,6 +114,7 @@ class _ProfileTabState extends State<ProfileTab> {
     String name,
     String age,
   ) {
+    errors = new List<String>();
     checkNullValues(name, age);
     checkValidLength(name);
     return errors.length < 0;
@@ -174,7 +168,9 @@ class _ProfileTabState extends State<ProfileTab> {
   }
 
   void removeTag(String tag) async {
-    tags.remove(tag);
+    setState(() {
+      tags.remove(tag);
+    });
     await db
         .collection("appUsers")
         .doc(auth.currentUser.uid)
@@ -211,12 +207,6 @@ class _ProfileTabState extends State<ProfileTab> {
     //no caso do usuário tentar colocar a opção da lista "selecione uma opção"
     if (!tag.contains("uma") && !tags.contains(tag)) {
       setState(() {
-        tagButtons.add(FlatButton(
-            color: Colors.blueAccent,
-            onPressed: () {
-              showTagRemovalDialog(tag);
-            },
-            child: Text(tag)));
         tags.add(tag);
       });
     }
@@ -306,9 +296,40 @@ class _ProfileTabState extends State<ProfileTab> {
               ),
               Column(
                 children: [
-                  Text("Suas tags: "),
-                  Row(
-                    children: tagButtons,
+                  Container(
+                    margin: const EdgeInsets.only(top: 20.0, bottom: 20.0),
+                  child: Text("Interesses:")),
+
+                  Container(
+                    width: MediaQuery.of(context).size.width * .8,
+                    height: MediaQuery.of(context).size.height * .2,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(8),
+                      itemCount: tags.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        return Container(
+                          height: 50,
+                          child: Center(
+                              child: Card(
+                                color: Colors.blue,
+                                child: InkWell(
+                                  splashColor: Colors.blue.withAlpha(30),
+                                  onTap: () => showTagRemovalDialog(tags[index]),
+                                  child: Container(
+                                    width: 300,
+                                    height: 100,
+                                    child:  Center
+                                      (child: Text('${tags[index]}', style: TextStyle(color: Colors.white))
+                                    ),
+                                  )
+                                ),
+
+                                //onPressed: () => showTagRemovalDialog(element)
+                            )
+                          ),
+                        );
+                      }
+                    ),
                   ),
                   FlatButton(
                     onPressed: () {
@@ -325,10 +346,12 @@ class _ProfileTabState extends State<ProfileTab> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  FlatButton(
+                  ElevatedButton(
                       onPressed: () => updateUserInfo(), child: Text("Salvar")),
-                  FlatButton(
-                      onPressed: () => logOut(), child: Text("Sair da conta."))
+                  RaisedButton(
+                    color: Colors.redAccent,
+                      textColor: Colors.white,
+                      onPressed: () => logOut(), child: Text("Sair"))
                 ],
               ),
               Text(_errorShowed),

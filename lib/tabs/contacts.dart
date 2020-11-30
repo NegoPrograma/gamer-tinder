@@ -77,7 +77,7 @@ class _ContactsTabState extends State<ContactsTab> {
                 child: Column(
                   children: [
                     Text(
-                      "Carregando conversas",
+                      "Carregando...",
                       style: TextStyle(fontSize: 40),
                     ),
                     CircularProgressIndicator()

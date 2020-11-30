@@ -159,14 +159,17 @@ class _MatchTabState extends State<MatchTab> {
 
   String showTags(Map<String, dynamic> user) {
     StringBuffer tags = StringBuffer();
-    tags.write("tags: ");
+    tags.write("Interesses: ");
     if (user['tags'] != null)
       user['tags'].forEach((tag) {
         tags.write(tag);
         tags.write(",");
       });
-
-    return tags.toString();
+    String t = tags.toString();
+    if (t != null && t.length > 0) {
+      t = t.substring(0, t.length - 1);
+    }
+    return t;
   }
 
   Widget build(BuildContext context) {
@@ -175,7 +178,7 @@ class _MatchTabState extends State<MatchTab> {
         child: Column(
           children: [
             Text(
-              "Carregando matchs",
+              "Carregando...",
               style: TextStyle(fontSize: 40),
             ),
             CircularProgressIndicator()
@@ -186,24 +189,30 @@ class _MatchTabState extends State<MatchTab> {
       return Container(
         child: Stack(
           children: [
-            Image.network(photo),
             Column(
               children: [
+              Container(
+                child:
+                Image.network(photo, width: MediaQuery.of(context).size.width * .95),
+              ),
                 Text(
                   name +
-                      " " +
-                      age.toString() +
                       ", " +
+                      age.toString() +
+                      " - " +
                       distance.toStringAsFixed(1) +
-                      "km",
+                      " Km",
+                  style: TextStyle(fontSize: 20)
                 ),
-                Text(showTags(users[index])),
+
+                Text(showTags(users[index]),
+                  style: TextStyle(fontSize: 20)),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     FlatButton(
                       color: Colors.redAccent,
-                      child: Text("Nope."),
+                      child: Text("Ignorar"),
                       onPressed: () {
                         if (index+1 <= users.length-1)
                           callNextUser(users[index+1]);
@@ -213,7 +222,7 @@ class _MatchTabState extends State<MatchTab> {
                     ),
                     FlatButton(
                       color: Colors.greenAccent,
-                      child: Text("Yes!"),
+                      child: Text("Curtir"),
                       onPressed: () {
                         if (index+1 <= users.length-1)
                           matchUser(users[index+1]);
@@ -222,9 +231,10 @@ class _MatchTabState extends State<MatchTab> {
                       },
                     ),
                   ],
-                )
+                ),
+
               ],
-            ),
+            )
           ],
         ),
       );

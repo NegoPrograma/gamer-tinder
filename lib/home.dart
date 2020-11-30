@@ -33,31 +33,31 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Abas"),
+        title: Text("Tinder Gamer"),
         bottom: TabBar(
           indicatorColor: Colors.blueAccent,
-          labelColor: Colors.black,
+          labelColor: Colors.white,
           controller: _tabController,
           tabs: <Widget>[
             Tab(
               text: "Procurar",
               icon: Icon(
-                Icons.favorite,
-                color: Colors.blueAccent,
+                Icons.videogame_asset_rounded,
+                color: Colors.white,
               ),
             ),
             Tab(
               text: "Contatos",
               icon: Icon(
                 Icons.chat,
-                color: Colors.blueAccent,
+                color: Colors.white,
               ),
             ),
             Tab(
               text: "Perfil",
               icon: Icon(
                 Icons.settings,
-                color: Colors.blueAccent,
+                color: Colors.white,
               ),
             ),
           ],
