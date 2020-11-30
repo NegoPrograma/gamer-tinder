@@ -16,14 +16,14 @@ class Register extends StatefulWidget {
    */
 
   TextEditingController _emailController =
-      TextEditingController(text: "teste@teste.com");
+      TextEditingController(text: "");
   TextEditingController _passwordController =
-      TextEditingController(text: "tester");
+      TextEditingController(text: "");
   TextEditingController _passwordCopyController =
-      TextEditingController(text: "tester");
+      TextEditingController(text: "");
   TextEditingController _nameController =
-      TextEditingController(text: "nome original");
-  TextEditingController _ageController = TextEditingController(text: "84");
+      TextEditingController(text: "");
+  TextEditingController _ageController = TextEditingController(text: "");
 
   @override
   _RegisterState createState() => _RegisterState();
@@ -61,17 +61,18 @@ class _RegisterState extends State<Register> {
 
   void checkValidLength(String name, String password) {
     if (name.length < 3)
-      errors.add("Seu nome deve conter pelo menos 3 caractéres");
+      errors.add("Seu nome deve conter pelo menos 3 caracteres");
     if (password.length < 8)
-      errors.add("Sua senha deve conter pelo menos 8 caractéres");
+      errors.add("Sua senha deve conter pelo menos 8 caracteres");
   }
 
   bool validateData(String email, String name, String age, String password,
       String passwordCopy) {
+    errors = new List<String>();
     checkNullValues(email, name, age, password, passwordCopy);
     checkPasswordEqualValues(password, passwordCopy);
     checkValidLength(name, password);
-    return errors.length < 0;
+    return errors.length < 1;
   }
 
   void callErrors() {
@@ -145,7 +146,7 @@ class _RegisterState extends State<Register> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Login page"),
-        backgroundColor: Colors.redAccent,
+        backgroundColor: Colors.blueAccent,
       ),
       body: Container(
         padding: EdgeInsets.all(16),
@@ -154,28 +155,30 @@ class _RegisterState extends State<Register> {
             children: [
               TextField(
                 controller: widget._nameController,
-                decoration: InputDecoration(labelText: "Nome:"),
+                decoration: InputDecoration(labelText: "Nome"),
               ),
               TextField(
                 controller: widget._ageController,
-                decoration: InputDecoration(labelText: "Idade:"),
+                decoration: InputDecoration(labelText: "Idade"),
               ),
               TextField(
                 controller: widget._emailController,
-                decoration: InputDecoration(labelText: "Email:"),
+                decoration: InputDecoration(labelText: "Email"),
               ),
               TextField(
                 controller: widget._passwordController,
-                decoration: InputDecoration(labelText: "Senha:"),
+                obscureText: true,
+                decoration: InputDecoration(labelText: "Senha"),
               ),
               TextField(
                 controller: widget._passwordCopyController,
+                obscureText: true,
                 decoration:
-                    InputDecoration(labelText: "Digite sua senha novamente:"),
+                    InputDecoration(labelText: "Digite sua senha novamente"),
               ),
-              FlatButton(
+              ElevatedButton(
                   onPressed: () => registerAccount(),
-                  child: Text("Criar conta.")),
+                  child: Text("Criar conta")),
               Text(_errorShowed),
             ],
           ),

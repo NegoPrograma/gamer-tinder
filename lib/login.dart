@@ -16,9 +16,9 @@ class Login extends StatefulWidget {
    */
 
   TextEditingController _emailController =
-      TextEditingController(text: "teste@teste.com");
+      TextEditingController(text: "");
   TextEditingController _passwordController =
-      TextEditingController(text: "tester");
+      TextEditingController(text: "");
 
   @override
   _LoginState createState() => _LoginState();
@@ -47,6 +47,7 @@ class _LoginState extends State<Login> {
         demandPermissionWidget = loginPage;
       });
     }
+    print(permission);
   }
 
   @override
@@ -56,19 +57,25 @@ class _LoginState extends State<Login> {
       padding: EdgeInsets.all(16),
       child: Column(
         children: [
-          TextField(controller: widget._emailController),
-          TextField(controller: widget._passwordController),
-          FlatButton(
-              onPressed: () => signIn(widget._emailController.text,
-                  widget._passwordController.text),
-              child: Text("Logar no sistema.")),
+          TextField(controller: widget._emailController, decoration: InputDecoration(
+              labelText: 'Email'
+          )),
+          TextField(controller: widget._passwordController, decoration: InputDecoration(
+              labelText: 'Senha'
+          ),
+          obscureText: true,),
+          ElevatedButton(
+              onPressed: () => signIn(widget._emailController.value.text,
+                  widget._passwordController.value.text),
+              child: Text("Logar no sistema")
+              ),
           FlatButton(
             onPressed: () => enterRegisterScreen(this.context),
             child: Text("Registrar-se"),
           ),
           SignInButton(
             Buttons.Google,
-            text: "Entrar via Google Email.",
+            text: "Entrar com Google",
             onPressed: () => googleSignIn(),
           )
         ],
@@ -79,10 +86,12 @@ class _LoginState extends State<Login> {
       child: Column(
         children: [
           Text(
-              "Este app precisa das suas coordenadas locais para funcionar corretamente."),
-          FlatButton(
+              "Precisamos acessar sua localização para continuar.",
+              style: TextStyle(fontSize: 20)
+              ),
+          ElevatedButton(
             onPressed: () => requirePermission(),
-            child: Text("Dar permissão."),
+              child: Text("Permitir acesso"),
           ),
         ],
       ),
@@ -95,6 +104,7 @@ class _LoginState extends State<Login> {
   }
 
   void signIn(email, password) async {
+    print(email + password);
     await FirebaseAuth.instance
         .signInWithEmailAndPassword(email: email, password: password);
     enterHomeScreen(this.context);
@@ -105,7 +115,7 @@ class _LoginState extends State<Login> {
     FirebaseFirestore db = FirebaseFirestore.instance;
     User user = credential.user;
     Position userPos = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
+        desiredAccuracy: LocationAccuracy.lowest);
     Map<String, dynamic> data = {
       "id": user.uid,
       "email": user.email,
@@ -150,7 +160,7 @@ class _LoginState extends State<Login> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Login page"),
+        title: Text("Login"),
         backgroundColor: Colors.blueAccent,
       ),
       body: demandPermissionWidget,
